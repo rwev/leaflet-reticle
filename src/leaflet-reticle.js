@@ -54,8 +54,12 @@ L.Control.Reticle = L.Control.extend({
                 this.map.on(`resize` ,() => this.update(true));
                 this.map.on(`zoomend` ,() => this.update(true));
                 this.map.on(`moveend` ,() => this.update(true));
+
+                this.map.on(`zoom` ,() => this.update(false));
                 this.map.on(`move` ,() => this.update(false));
+                
                 this.update(true);
+                
                 return this.container;
         },
 
