@@ -1,0 +1,24 @@
+{
+  "name": "leaflet-reticle",
+  "displayName": "leaflet-reticle",
+  "version": "0.0.0",
+  "description": "",
+  "author": "rwev",
+  "license": "GPL-3.0",
+  "main": "dist/leaflet-reticle.js",
+  "files": [
+          "src"
+  ],
+  "bugs": {
+    "url": "https://github.com/rwev/leaflet-reticle/issues"
+  },
+  "homepage": "https://github.com/rwev/leaflet-reticle#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rwev/leaflet-reticle.git"
+  },
+  "private": true,
+  "dependencies": {
+    "leaflet": "^1.4.0"
+  }
+}

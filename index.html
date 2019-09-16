@@ -1,0 +1,40 @@
+<html lang="en">
+        <head>
+                <meta charset ="UTF-8" />
+                <title>leaflet-reticle</title>
+
+                <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"/>
+                <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet-src.js"></script>
+
+                <link rel="stylesheet" href="src/leaflet-reticle.css"></script>
+                <script src="src/leaflet-reticle.js"></script>
+
+        </head>
+
+        <body style="padding: 0; margin: 0;">
+                <div style="height: 100%; width: 100%;" id="map"></div>
+
+                <script type="text/javascript">
+
+                        var map = L.map("map").setView([43.37, -116.12], 6);
+
+                        var osmAttribution =
+                                'Map data &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
+                        var leafletPluginAttribution =
+                                '<a href="https://github.com/rwev/leaflet-reticle">reticle</a>';
+
+                        L.tileLayer(
+                                "https://tile-{s}.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+                                {
+                                        attribution: [
+                                                osmAttribution,
+                                                leafletPluginAttribution
+                                        ].join(" | ")
+                                }
+                        ).addTo(map);
+                        
+                        L.control.reticle({}).addTo(map);
+                </script>
+        </body>
+
+</html>

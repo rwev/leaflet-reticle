@@ -1,0 +1,30 @@
+.leaflet-reticle {
+       
+        border-radius: 5px;
+        background: #fff;
+        border: 2px solid rgba(0, 0, 0, 0.2);
+        background-clip: padding-box;
+        
+        padding: 5px;
+}
+
+.leaflet-reticle-center {
+        position: absolute;
+        top: calc(50%);
+        left: calc(50%);
+        z-index: 2000;
+        pointer-events: none; /* pass all events through to underlying map */
+}
+
+.leaflet-reticle-center p {
+        font-size: 11px;
+        margin: 5px 0 0 5px;
+}
+
+.leaflet-reticle #leaflet-reticle-button.off {
+        background: #e5e5e5;
+        -webkit-box-shadow: inset 0px 0px 5px #c1c1c1;
+-moz-box-shadow: inset 0px 0px 5px #c1c1c1;
+        box-shadow: inset 0px 0px 5px #c1c1c1;
+}
+
