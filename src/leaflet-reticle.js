@@ -1,14 +1,18 @@
-// TODO add scale to reticle tick marks (adapt from BetterScale)
+// TODO parameterize fillText canvas write positioning
 
 L.Control.Reticle = L.Control.extend({
-        
+        _HALF: 1 / 2,
+        _QUARTER: 1 / 4,
+        _THREE_QUARTERS: 3 / 4,
+
         options: {
                 position: `topright`,
                 toggleReticleHTML: `&#9769`, // cross of jerusalem
                 fetchElevation: true,
                 offsetFromCenter: 15,
                 tickLength: 7.5,
-                maxLength: 125
+                maxLength: 125,
+                metric: true
         },
 
         onRemove: function() {
@@ -44,6 +48,7 @@ L.Control.Reticle = L.Control.extend({
                 this.ctx = this.canvas.getContext(`2d`);
 
                 // Move events as catch-all for resizing, zoom, panning
+
                 this.map.on(`moveend`, () => this.update(true));
                 this.map.on(`move`, () => this.update(false));
 
@@ -56,7 +61,6 @@ L.Control.Reticle = L.Control.extend({
         },
 
         update: function(doAsyncOnly) {
-
                 center = this.map.getCenter();
 
                 if (doAsyncOnly) {
@@ -67,24 +71,26 @@ L.Control.Reticle = L.Control.extend({
                 this.resetCanvas();
                 this.drawCenterCoordinates(center.lat, center.lng);
                 this.drawScales();
-
         },
 
         drawCenterCoordinates: function(lat, lng) {
                 latStr = this.formatNumber(center.lat);
                 lngStr = this.formatNumber(center.lng);
 
-                this.ctx.fillText(`(${latStr}, ${lngStr})`, 20, 20);
+                this.ctx.fillText(`(${latStr}, ${lngStr})`, 15, 25);
         },
 
         drawElevation: function(lat, lng) {
-
                 if (!this.options.fetchElevation) {
                         return;
                 }
 
                 this.fetchElevation(lat, lng).then(elev =>
-                        this.ctx.fillText(`@ ${elev} ft`, 20, 40)
+                        this.ctx.fillText(
+                                `@ ${elev} ${this.options.metric ? `m` : `ft`}`,
+                                15,
+                                40
+                        )
                 );
         },
 
@@ -93,32 +99,32 @@ L.Control.Reticle = L.Control.extend({
                 mapWidthFromCenter = mapSize.x / 2;
                 mapHeightFromCenter = mapSize.y / 2;
 
-                maxWidthMeters = this.calculateMaxMeters(
+                maxWidthDist = this.calculateMaxDistance(
                         mapWidthFromCenter,
                         mapHeightFromCenter,
                         mapWidthFromCenter + this.options.maxLength,
                         mapHeightFromCenter
                 );
 
-                maxHeightMeters = this.calculateMaxMeters(
+                maxHeightDist = this.calculateMaxDistance(
                         mapWidthFromCenter,
                         mapHeightFromCenter,
                         mapWidthFromCenter,
                         mapHeightFromCenter + this.options.maxLength
                 );
 
-                this.drawWidthScale(maxWidthMeters);
-                this.drawHeightScale(maxHeightMeters);
+                this.drawWidthScale(maxWidthDist);
+                this.drawHeightScale(maxHeightDist);
         },
 
-        drawWidthScale: function(maxWidthMeters) {
-                roundMeters = this.getRoundNum(maxWidthMeters);
-                label = this.getScaleLabel(roundMeters);
-
+        drawWidthScale: function(maxWidthDist) {
+                
+                [ratio, label] = this.getScaleRatioLabel(maxWidthDist);
+                
                 scaleLength =
                         (this.options.maxLength -
                                 this.options.offsetFromCenter) *
-                        (roundMeters / maxWidthMeters);
+                        ratio;
 
                 this.drawLine(
                         this.options.offsetFromCenter,
@@ -127,25 +133,54 @@ L.Control.Reticle = L.Control.extend({
                         this.options.tickLength
                 );
 
-                
-                this.drawLine(this.options.offsetFromCenter + scaleLength * 0.75, this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.75, this.options.tickLength * 0.50);
-                this.drawLine(this.options.offsetFromCenter + scaleLength * 0.25, this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.25, this.options.tickLength * 0.50);
-                this.drawLine(this.options.offsetFromCenter + scaleLength * 0.50, this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.50, this.options.tickLength * 0.25);
-                
-                this.drawLine(this.options.offsetFromCenter + scaleLength, this.options.tickLength, this.options.offsetFromCenter +  scaleLength, 0);
+                this.drawLine(
+                        this.options.offsetFromCenter +
+                                scaleLength * this._THREE_QUARTERS,
+                        this.options.tickLength,
+                        this.options.offsetFromCenter +
+                                scaleLength * this._THREE_QUARTERS,
+                        this.options.tickLength * this._HALF
+                );
+                this.drawLine(
+                        this.options.offsetFromCenter +
+                                scaleLength * this._QUARTER,
+                        this.options.tickLength,
 
-                this.ctx.fillText(label, this.options.offsetFromCenter + scaleLength + 2, 7);
-                
+                        this.options.offsetFromCenter +
+                                scaleLength * this._QUARTER,
+                        this.options.tickLength * this._HALF
+                );
+                this.drawLine(
+                        this.options.offsetFromCenter +
+                                scaleLength * this._HALF,
+                        this.options.tickLength,
+                        this.options.offsetFromCenter +
+                                scaleLength * this._HALF,
+                        this.options.tickLength * this._QUARTER
+                );
+
+                this.drawLine(
+                        this.options.offsetFromCenter + scaleLength,
+                        this.options.tickLength,
+                        this.options.offsetFromCenter + scaleLength,
+                        0
+                );
+
+                this.ctx.fillText(
+                        label,
+                        this.options.offsetFromCenter + scaleLength + 2,
+                        7
+                );
         },
 
-        drawHeightScale: function(maxHeightMeters) {
-                roundMeters = this.getRoundNum(maxHeightMeters);
-                label = this.getScaleLabel(roundMeters);
+        drawHeightScale: function(maxHeightDist) {
 
+                [ratio, label] = this.getScaleRatioLabel(maxHeightDist);
+                
                 scaleLength =
                         (this.options.maxLength -
                                 this.options.offsetFromCenter) *
-                        (roundMeters / maxHeightMeters);
+                        ratio;
 
                 this.drawLine(
                         this.options.tickLength,
@@ -154,41 +189,80 @@ L.Control.Reticle = L.Control.extend({
                         this.options.offsetFromCenter + scaleLength
                 );
 
-                this.drawLine(this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.75, this.options.tickLength * 0.50, this.options.offsetFromCenter + scaleLength * 0.75);
-                this.drawLine(this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.25, this.options.tickLength * 0.50, this.options.offsetFromCenter + scaleLength * 0.25);
-                this.drawLine(this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.50, this.options.tickLength * 0.25, this.options.offsetFromCenter + scaleLength * 0.50);
-                
-                this.drawLine(this.options.tickLength,  this.options.offsetFromCenter + scaleLength, 0, this.options.offsetFromCenter + scaleLength);
-                
-                this.ctx.fillText(label, 0, this.options.offsetFromCenter + scaleLength + 10);
+                console.log(dist);
+                this.drawLine(
+                        this.options.tickLength,
+                        this.options.offsetFromCenter +
+                                scaleLength * this._THREE_QUARTERS,
+                        this.options.tickLength * this._HALF,
+                        this.options.offsetFromCenter +
+                                scaleLength * this._THREE_QUARTERS
+                );
+                this.drawLine(
+                        this.options.tickLength,
+                        this.options.offsetFromCenter +
+                                scaleLength * this._QUARTER,
+                        this.options.tickLength * this._HALF,
+                        this.options.offsetFromCenter +
+                                scaleLength * this._QUARTER
+                );
+                this.drawLine(
+                        this.options.tickLength,
+                        this.options.offsetFromCenter +
+                                scaleLength * this._HALF,
+                        this.options.tickLength * this._QUARTER,
+                        this.options.offsetFromCenter + scaleLength * this._HALF
+                );
+
+                this.drawLine(
+                        this.options.tickLength,
+                        this.options.offsetFromCenter + scaleLength,
+                        0,
+                        this.options.offsetFromCenter + scaleLength
+                );
+
+                this.ctx.fillText(
+                        label,
+                        0,
+                        this.options.offsetFromCenter + scaleLength + 10
+                );
         },
 
-        getScaleLabel: function(roundMeters) {
-                return roundMeters < 1000
-                        ? `${roundMeters} m`
-                        : `${roundMeters / 1000} km`;
+        getScaleRatioLabel: function(maxDist) {
+
+                factor = this.options.metric ? 1000 : 5280;
+
+                if (maxDist > factor) {
+                        maxDist = maxDist / factor;
+                        roundDist = this.getRoundNum(maxDist);
+                        unitStr = this.options.metric ? `km` : `mi`
+                } else {
+                        roundDist = this.getRoundNum(maxDist);
+                        unitStr = this.options.metric ? `m` : `ft`
+                }
+
+                return [roundDist / maxDist, `${roundDist} ${unitStr}`];
         },
 
-        calculateMaxMeters: function(xS, yS, xE, yE) {
-                return this.map.distance(
+        calculateMaxDistance: function(xS, yS, xE, yE) {
+                dist = this.map.distance(
                         this.map.containerPointToLatLng([xS, yS]),
                         this.map.containerPointToLatLng([xE, yE])
                 );
+                return this.options.metric ? dist : dist * 3.28084;
         },
 
         getRoundNum: function(num) {
                 // from L.Control.scale
-                pow10 = Math.pow(10, (Math.floor(num) + ``).length - 1);
+                pow10 = Math.pow(10, `${Math.floor(num)}`.length - 1);
                 d = num / pow10;
-
                 d = d >= 10 ? 10 : d >= 5 ? 5 : d >= 3 ? 3 : d >= 2 ? 2 : 1;
-
                 return pow10 * d;
         },
 
         fetchElevation: async function(lat, lng) {
-                const UNITS = "Feet";
-                const OUTPUT = "json";
+                const UNITS = this.options.metric ? `Meters` : `Feet`;
+                const OUTPUT = `json`;
                 const baseUrl = `https://nationalmap.gov/epqs/pqs.php?units=${UNITS}&output=${OUTPUT}`;
                 const url = baseUrl + `&x=${lng}&y=${lat}`;
 

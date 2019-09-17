@@ -5,11 +5,6 @@
 
                 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"/>
                 <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet-src.js"></script>
-
-
-                <link rel="stylesheet"
-                      href="src/L.Control.BetterScale.css">
-                <script src="src/L.Control.BetterScale.js"></script>
                 
                 <link rel="stylesheet" href="src/leaflet-reticle.css">
                 <script src="src/leaflet-reticle.js"></script>
@@ -39,7 +34,7 @@
                         ).addTo(map);
                         
                         L.control.reticle({}).addTo(map);
-                        L.control.betterscale().addTo(map);
+                        L.control.scale().addTo(map);
                 </script>
         </body>
 
