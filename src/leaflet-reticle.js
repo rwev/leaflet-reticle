@@ -121,10 +121,7 @@ L.Control.Reticle = L.Control.extend({
                 
                 [ratio, label] = this.getScaleRatioLabel(maxWidthDist);
                 
-                scaleLength =
-                        (this.options.maxLength -
-                                this.options.offsetFromCenter) *
-                        ratio;
+                scaleLength = this.options.maxLength * ratio;
 
                 this.drawLine(
                         this.options.offsetFromCenter,
@@ -178,9 +175,7 @@ L.Control.Reticle = L.Control.extend({
                 [ratio, label] = this.getScaleRatioLabel(maxHeightDist);
                 
                 scaleLength =
-                        (this.options.maxLength -
-                                this.options.offsetFromCenter) *
-                        ratio;
+                        this.options.maxLength * ratio;
 
                 this.drawLine(
                         this.options.tickLength,
