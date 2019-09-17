@@ -1,13 +1,14 @@
 // TODO add scale to reticle tick marks (adapt from BetterScale)
 
 L.Control.Reticle = L.Control.extend({
+        
         options: {
                 position: `topright`,
                 toggleReticleHTML: `&#9769`, // cross of jerusalem
                 fetchElevation: true,
-                offsetFromCenter: 10,
-                tickLength: 5,
-                maxLength: 100
+                offsetFromCenter: 15,
+                tickLength: 7.5,
+                maxLength: 125
         },
 
         onRemove: function() {
@@ -114,7 +115,7 @@ L.Control.Reticle = L.Control.extend({
                 roundMeters = this.getRoundNum(maxWidthMeters);
                 label = this.getScaleLabel(roundMeters);
 
-                end =
+                scaleLength =
                         (this.options.maxLength -
                                 this.options.offsetFromCenter) *
                         (roundMeters / maxWidthMeters);
@@ -122,19 +123,26 @@ L.Control.Reticle = L.Control.extend({
                 this.drawLine(
                         this.options.offsetFromCenter,
                         this.options.tickLength,
-                        end,
+                        this.options.offsetFromCenter + scaleLength,
                         this.options.tickLength
                 );
-                this.drawLine(end, this.options.tickLength, end, 0);
 
-                this.ctx.fillText(label, end + 2, 7);
+                
+                this.drawLine(this.options.offsetFromCenter + scaleLength * 0.75, this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.75, this.options.tickLength * 0.50);
+                this.drawLine(this.options.offsetFromCenter + scaleLength * 0.25, this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.25, this.options.tickLength * 0.50);
+                this.drawLine(this.options.offsetFromCenter + scaleLength * 0.50, this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.50, this.options.tickLength * 0.25);
+                
+                this.drawLine(this.options.offsetFromCenter + scaleLength, this.options.tickLength, this.options.offsetFromCenter +  scaleLength, 0);
+
+                this.ctx.fillText(label, this.options.offsetFromCenter + scaleLength + 2, 7);
+                
         },
 
         drawHeightScale: function(maxHeightMeters) {
                 roundMeters = this.getRoundNum(maxHeightMeters);
                 label = this.getScaleLabel(roundMeters);
 
-                end =
+                scaleLength =
                         (this.options.maxLength -
                                 this.options.offsetFromCenter) *
                         (roundMeters / maxHeightMeters);
@@ -143,11 +151,16 @@ L.Control.Reticle = L.Control.extend({
                         this.options.tickLength,
                         this.options.offsetFromCenter,
                         this.options.tickLength,
-                        end
+                        this.options.offsetFromCenter + scaleLength
                 );
-                this.drawLine(this.options.tickLength, end, 0, end);
 
-                this.ctx.fillText(label, 0, end + 10);
+                this.drawLine(this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.75, this.options.tickLength * 0.50, this.options.offsetFromCenter + scaleLength * 0.75);
+                this.drawLine(this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.25, this.options.tickLength * 0.50, this.options.offsetFromCenter + scaleLength * 0.25);
+                this.drawLine(this.options.tickLength, this.options.offsetFromCenter + scaleLength * 0.50, this.options.tickLength * 0.25, this.options.offsetFromCenter + scaleLength * 0.50);
+                
+                this.drawLine(this.options.tickLength,  this.options.offsetFromCenter + scaleLength, 0, this.options.offsetFromCenter + scaleLength);
+                
+                this.ctx.fillText(label, 0, this.options.offsetFromCenter + scaleLength + 10);
         },
 
         getScaleLabel: function(roundMeters) {
