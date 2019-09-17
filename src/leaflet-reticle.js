@@ -5,7 +5,10 @@ L.Control.Reticle = L.Control.extend({
                 position: `topright`,
                 toggleReticleHTML: `&#9769`, // cross of jerusalem
                 fetchElevation: true,
-                placeholderHTML: `-----`
+                placeholderHTML: `-----`,
+                offsetFromCenter: 10,
+                tickLength: 5,
+                maxLength: 100
         },
 
         onRemove: function() {
@@ -44,12 +47,18 @@ L.Control.Reticle = L.Control.extend({
                 }
                 document.body.appendChild(center_div);
 
-                canvas = document.createElement(`canvas`);
-                canvas.classList.add(`leaflet-reticle-center`);
-                document.body.appendChild(canvas);
+                this.canvas = document.createElement(`canvas`);
+                this.canvas.classList.add(`leaflet-reticle-center`);
+                this.canvas.style.margin = `-${this.options.tickLength}px 0 0 -${this.options.tickLength}`;
 
-                ctx = canvas.getContext(`2d`);
-                this.drawReticle(ctx)
+                document.body.appendChild(this.canvas);
+
+                this.ctx = this.canvas.getContext(`2d`);
+                // this.drawReticle(ctx)
+
+                //this.lat_scale_canvas = document.createElement(`canvas`);
+                //this.lat_scale_canvas.classList.add(`leaflet-reticle-center`);
+                //document.body.appendChild(this.lat_scale_canvas);
 
                 this.map.on(`resize` ,() => this.update(true));
                 this.map.on(`zoomend` ,() => this.update(true));
@@ -57,19 +66,16 @@ L.Control.Reticle = L.Control.extend({
 
                 this.map.on(`zoom` ,() => this.update(false));
                 this.map.on(`move` ,() => this.update(false));
-                
-                this.update(true);
-                
+
+                this.map.whenReady(() => this.update(true));
+
                 return this.container;
         },
 
         drawReticle: function(ctx) {
-                const OFFSET = 5;
-                const LENGTH = 45;
-
-                // half-reticle, lower left of center
-                this.drawLine(ctx, 0, OFFSET, 0, LENGTH);
-                this.drawLine(ctx, OFFSET, 0, LENGTH, 0);
+                const length =  this.options.maxLength - this.options.offsetFromCenter; // half-reticle, lower left of center
+                this.drawLine(ctx, 0, this.options.offsetFromCenter, 0, length);
+                this.drawLine(ctx, this.options.offsetFromCenter, 0, length, 0);
         },
 
         drawLine: function(ctx, xS, yS, xE, yE) {
@@ -92,16 +98,98 @@ L.Control.Reticle = L.Control.extend({
                 } else {
                         if (this.options.fetchElevation) {
                                 this.elev_e.innerHTML = this.options.placeholderHTML;
+
                         }
                 }
+
+                mapSize = this.map.getSize();
+                mapWidthFromCenter = mapSize.x / 2;
+                mapHeightFromCenter = mapSize.y / 2;
+
+                maxWidthMeters = this.map.distance(
+                        this.map.containerPointToLatLng(
+                                [
+                                        mapWidthFromCenter,
+                                        mapHeightFromCenter
+                                ]
+                        ),
+                        this.map.containerPointToLatLng(
+                                [
+                                        mapWidthFromCenter + this.options.maxLength,
+                                        mapHeightFromCenter
+                                ]
+                        )
+                );
+
+
+                roundMeters = this.getRoundNum(maxWidthMeters);
+                scaleLabel = roundMeters < 1000 ? `${roundMeters} m` : `${roundMeters / 1000} km`;
+
+                // update scale
+
+                this.drawWidthReticle(scaleLabel, roundMeters / maxWidthMeters);
+
+
+        },
+
+        drawWidthReticle: function(label, ratio) {
+
+                console.log(label, ratio);
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.ctx.beginPath();
+
+                end = (this.options.maxLength - this.options.offsetFromCenter) * ratio;
+
+                this.drawLine(
+                        this.ctx, 
+                        this.options.offsetFromCenter, this.options.tickLength,
+                        end, this.options.tickLength);
+
+                this.drawLine(
+                        this.ctx,
+                        this.options.tickLength, this.options.offsetFromCenter,
+                        this.options.tickLength, end
+                );
+                 
+                this.drawLine(
+                        this.ctx,
+                        this.options.tickLength, end,
+                        0, end
+                );
+
+                this.drawLine(
+                        this.ctx,
+                        end, this.options.tickLength,
+                        end, 0
+                );
+
+                this.ctx.fillText(label, end, end);
+
+
+       },
+
+
+
+
+        getRoundNum: function(num) {
+                // from L.Control.scale
+                pow10 = Math.pow(10, (Math.floor(num) + ``).length -1);
+                d = num / pow10;
+
+                d = d >= 10 ? 10 :
+                        d >= 5 ? 5 :
+                        d >= 3 ? 3 :
+                        d >= 2 ? 2 : 1;
+
+                return pow10 * d;
         },
 
         fetchElevation: async function(lat, lng) {
-
                 const UNITS = 'Feet';
                 const OUTPUT = 'json';
                 const baseUrl = `https://nationalmap.gov/epqs/pqs.php?units=${UNITS}&output=${OUTPUT}`;
-        	const url = baseUrl + `&x=${lng}&y=${lat}`;
+                const url = baseUrl + `&x=${lng}&y=${lat}`;
 
                 const usgsQueryResults= await fetch(url).then(response => response.json());
                 return usgsQueryResults.USGS_Elevation_Point_Query_Service.Elevation_Query.Elevation;
