@@ -1,5 +1,5 @@
 // TODO add scale to reticle tick marks (adapt from BetterScale)
-// TODO (lat, lng) @ elev lower right of center
+
 L.Control.Reticle = L.Control.extend({
         options: {
                 position: `topright`,
@@ -54,11 +54,6 @@ L.Control.Reticle = L.Control.extend({
                 document.body.appendChild(this.canvas);
 
                 this.ctx = this.canvas.getContext(`2d`);
-                // this.drawReticle(ctx)
-
-                //this.lat_scale_canvas = document.createElement(`canvas`);
-                //this.lat_scale_canvas.classList.add(`leaflet-reticle-center`);
-                //document.body.appendChild(this.lat_scale_canvas);
 
                 this.map.on(`resize` ,() => this.update(true));
                 this.map.on(`zoomend` ,() => this.update(true));
@@ -70,12 +65,6 @@ L.Control.Reticle = L.Control.extend({
                 this.map.whenReady(() => this.update(true));
 
                 return this.container;
-        },
-
-        drawReticle: function(ctx) {
-                const length =  this.options.maxLength - this.options.offsetFromCenter; // half-reticle, lower left of center
-                this.drawLine(ctx, 0, this.options.offsetFromCenter, 0, length);
-                this.drawLine(ctx, this.options.offsetFromCenter, 0, length, 0);
         },
 
         drawLine: function(ctx, xS, yS, xE, yE) {
@@ -102,42 +91,40 @@ L.Control.Reticle = L.Control.extend({
                         }
                 }
 
+                this.drawScales();
+             
+        },
+
+        drawScales: function() {
+                
                 mapSize = this.map.getSize();
                 mapWidthFromCenter = mapSize.x / 2;
                 mapHeightFromCenter = mapSize.y / 2;
 
-                maxWidthMeters = this.map.distance(
-                        this.map.containerPointToLatLng(
-                                [
-                                        mapWidthFromCenter,
-                                        mapHeightFromCenter
-                                ]
-                        ),
-                        this.map.containerPointToLatLng(
-                                [
-                                        mapWidthFromCenter + this.options.maxLength,
-                                        mapHeightFromCenter
-                                ]
-                        )
-                );
+                maxWidthMeters = this.calculateMaxMeters(
+                                        mapWidthFromCenter,  mapHeightFromCenter,
+                                        mapWidthFromCenter + this.options.maxLength,mapHeightFromCenter
+                                );
+
+                maxHeightMeters = this.calculateMaxMeters(
+                                        mapWidthFromCenter,  mapHeightFromCenter,
+                                        mapWidthFromCenter,mapHeightFromCenter + this.options.maxLength
+                                );
 
 
-                roundMeters = this.getRoundNum(maxWidthMeters);
-                scaleLabel = roundMeters < 1000 ? `${roundMeters} m` : `${roundMeters / 1000} km`;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.beginPath();
 
-                // update scale
-
-                this.drawWidthReticle(scaleLabel, roundMeters / maxWidthMeters);
-
-
+                this.drawWidthScale(maxWidthMeters);
+                this.drawHeightScale(maxHeightMeters);
         },
 
-        drawWidthReticle: function(label, ratio) {
+        drawWidthScale: function(maxWidthMeters) {
 
-                console.log(label, ratio);
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                roundMeters = this.getRoundNum(maxWidthMeters);
+                ratio = roundMeters / maxWidthMeters;
 
-                this.ctx.beginPath();
+                label = this.getScaleLabel(roundMeters);
 
                 end = (this.options.maxLength - this.options.offsetFromCenter) * ratio;
 
@@ -146,6 +133,25 @@ L.Control.Reticle = L.Control.extend({
                         this.options.offsetFromCenter, this.options.tickLength,
                         end, this.options.tickLength);
 
+                this.drawLine(
+                        this.ctx,
+                        end, this.options.tickLength,
+                        end, 0
+                );
+
+                // this.ctx.fillText(label, end, end);
+                this.ctx.fillText(label, end + 2, 7);
+
+        },
+
+        drawHeightScale: function(maxHeightMeters) {
+
+                roundMeters = this.getRoundNum(maxHeightMeters);
+                ratio = roundMeters / maxHeightMeters;
+
+                label = this.getScaleLabel(roundMeters);
+
+                end = (this.options.maxLength - this.options.offsetFromCenter) * ratio;
                 this.drawLine(
                         this.ctx,
                         this.options.tickLength, this.options.offsetFromCenter,
@@ -157,20 +163,19 @@ L.Control.Reticle = L.Control.extend({
                         this.options.tickLength, end,
                         0, end
                 );
+                this.ctx.fillText(label, 0, end + 10);
+        },
 
-                this.drawLine(
-                        this.ctx,
-                        end, this.options.tickLength,
-                        end, 0
+        getScaleLabel: function(roundMeters) {
+                return roundMeters < 1000 ? `${roundMeters} m` : `${roundMeters / 1000} km`;
+        },
+
+        calculateMaxMeters: function(xS, yS, xE, yE) {
+                return this.map.distance(
+                        this.map.containerPointToLatLng([xS, yS]),
+                        this.map.containerPointToLatLng([xE, yE]), 
                 );
-
-                this.ctx.fillText(label, end, end);
-
-
-       },
-
-
-
+        },
 
         getRoundNum: function(num) {
                 // from L.Control.scale
