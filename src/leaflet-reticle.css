@@ -9,7 +9,7 @@
 }
 
 .leaflet-reticle-center {
-        position: absolute;
+        position: relative;
         top: calc(50%);
         left: calc(50%);
         z-index: 2000;

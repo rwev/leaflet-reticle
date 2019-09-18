@@ -33,7 +33,11 @@
                                 }
                         ).addTo(map);
                         
-                        L.control.reticle({}).addTo(map);
+                        L.control.reticle({
+                                mapId: "map",
+                                metric: false,
+                                fetchElevation: true
+                        }).addTo(map);
                         L.control.scale().addTo(map);
                 </script>
         </body>

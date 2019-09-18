@@ -1,13 +1,13 @@
 // TODO parameterize fillText canvas write positioning
 
 L.Control.Reticle = L.Control.extend({
+
         _HALF: 1 / 2,
         _QUARTER: 1 / 4,
         _THREE_QUARTERS: 3 / 4,
 
         options: {
-                position: `topright`,
-                toggleReticleHTML: `&#9769`, // cross of jerusalem
+                mapId: `map`,
                 fetchElevation: true,
                 offsetFromCenter: 15,
                 tickLength: 7.5,
@@ -23,32 +23,20 @@ L.Control.Reticle = L.Control.extend({
                 this.map = map;
 
                 this.container = L.DomUtil.create(`div`, `leaflet-reticle`);
-
-                L.DomEvent.disableClickPropagation(this.container);
-                L.DomEvent.on(this.container, `control_container`, function(e) {
-                        L.DomEvent.stopPropagation(e);
-                });
-                L.DomEvent.disableScrollPropagation(this.container);
-
-                this.button = document.createElement(`button`);
-                this.button.id = `leaflet-reticle-button`;
-                this.button.classList.add(`off`);
-                this.button.innerHTML = this.options.toggleReticleHTML;
-                this.button.onclick = () => this.toggle();
-                this.container.appendChild(this.button);
-
+                this.container.style.display = `none`;
+               
                 this.canvas = document.createElement(`canvas`);
                 this.canvas.classList.add(`leaflet-reticle-center`);
                 this.canvas.style.margin = `-${
                         this.options.tickLength
                 }px 0 0 -${this.options.tickLength}`;
 
-                document.body.appendChild(this.canvas);
+                map_container = document.getElementById(this.options.mapId);
+                map_container.appendChild(this.canvas);
 
                 this.ctx = this.canvas.getContext(`2d`);
 
                 // Move events as catch-all for resizing, zoom, panning
-
                 this.map.on(`moveend`, () => this.update(true));
                 this.map.on(`move`, () => this.update(false));
 
@@ -184,7 +172,6 @@ L.Control.Reticle = L.Control.extend({
                         this.options.offsetFromCenter + scaleLength
                 );
 
-                console.log(dist);
                 this.drawLine(
                         this.options.tickLength,
                         this.options.offsetFromCenter +
