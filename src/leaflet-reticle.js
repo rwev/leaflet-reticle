@@ -1,4 +1,4 @@
-// TODO parameterize fillText canvas write positioning
+// TODO generally refactor / generalize repetitive drawing code
 
 L.Control.Reticle = L.Control.extend({
 
@@ -31,7 +31,7 @@ L.Control.Reticle = L.Control.extend({
                         this.options.tickLength
                 }px 0 0 -${this.options.tickLength}`;
 
-                map_container = document.getElementById(this.options.mapId);
+                let map_container = document.getElementById(this.options.mapId);
                 map_container.appendChild(this.canvas);
 
                 this.ctx = this.canvas.getContext(`2d`);
@@ -49,7 +49,7 @@ L.Control.Reticle = L.Control.extend({
         },
 
         update: function(doAsyncOnly) {
-                center = this.map.getCenter();
+                let center = this.map.getCenter();
 
                 if (doAsyncOnly) {
                         this.drawElevation(center.lat, center.lng);
@@ -62,8 +62,8 @@ L.Control.Reticle = L.Control.extend({
         },
 
         drawCenterCoordinates: function(lat, lng) {
-                latStr = this.formatNumber(center.lat);
-                lngStr = this.formatNumber(center.lng);
+                let latStr = this.formatNumber(lat);
+                let lngStr = this.formatNumber(lng);
 
                 this.ctx.fillText(`(${latStr}, ${lngStr})`, 15, 25);
         },
@@ -83,22 +83,22 @@ L.Control.Reticle = L.Control.extend({
         },
 
         drawScales: function() {
-                mapSize = this.map.getSize();
-                mapWidthFromCenter = mapSize.x / 2;
-                mapHeightFromCenter = mapSize.y / 2;
+                let mapSize = this.map.getSize();
+                let mapWidthFromCenter = mapSize.x / 2;
+                let mapHeightFromCenter = mapSize.y / 2;
 
-                maxWidthDist = this.calculateMaxDistance(
-                        mapWidthFromCenter,
-                        mapHeightFromCenter,
-                        mapWidthFromCenter + this.options.maxLength,
-                        mapHeightFromCenter
+                let maxWidthDist = this.calculateMaxDistance(
+                    mapWidthFromCenter,
+                    mapHeightFromCenter,
+                    mapWidthFromCenter + this.options.maxLength,
+                    mapHeightFromCenter
                 );
 
-                maxHeightDist = this.calculateMaxDistance(
-                        mapWidthFromCenter,
-                        mapHeightFromCenter,
-                        mapWidthFromCenter,
-                        mapHeightFromCenter + this.options.maxLength
+                let maxHeightDist = this.calculateMaxDistance(
+                    mapWidthFromCenter,
+                    mapHeightFromCenter,
+                    mapWidthFromCenter,
+                    mapHeightFromCenter + this.options.maxLength
                 );
 
                 this.drawWidthScale(maxWidthDist);
@@ -106,10 +106,11 @@ L.Control.Reticle = L.Control.extend({
         },
 
         drawWidthScale: function(maxWidthDist) {
-                
+
+                let ratio, label;
                 [ratio, label] = this.getScaleRatioLabel(maxWidthDist);
-                
-                scaleLength = this.options.maxLength * ratio;
+
+                let scaleLength = this.options.maxLength * ratio;
 
                 this.drawLine(
                         this.options.offsetFromCenter,
@@ -160,10 +161,11 @@ L.Control.Reticle = L.Control.extend({
 
         drawHeightScale: function(maxHeightDist) {
 
+                let ratio, label;
                 [ratio, label] = this.getScaleRatioLabel(maxHeightDist);
-                
-                scaleLength =
-                        this.options.maxLength * ratio;
+
+                let scaleLength =
+                    this.options.maxLength * ratio;
 
                 this.drawLine(
                         this.options.tickLength,
@@ -212,8 +214,9 @@ L.Control.Reticle = L.Control.extend({
 
         getScaleRatioLabel: function(maxDist) {
 
-                factor = this.options.metric ? 1000 : 5280;
+                let factor = this.options.metric ? 1000 : 5280;
 
+                let roundDist, unitStr;
                 if (maxDist > factor) {
                         maxDist = maxDist / factor;
                         roundDist = this.getRoundNum(maxDist);
@@ -227,17 +230,17 @@ L.Control.Reticle = L.Control.extend({
         },
 
         calculateMaxDistance: function(xS, yS, xE, yE) {
-                dist = this.map.distance(
-                        this.map.containerPointToLatLng([xS, yS]),
-                        this.map.containerPointToLatLng([xE, yE])
+                let dist = this.map.distance(
+                    this.map.containerPointToLatLng([xS, yS]),
+                    this.map.containerPointToLatLng([xE, yE])
                 );
                 return this.options.metric ? dist : dist * 3.28084;
         },
 
         getRoundNum: function(num) {
                 // from L.Control.scale
-                pow10 = Math.pow(10, `${Math.floor(num)}`.length - 1);
-                d = num / pow10;
+                let pow10 = Math.pow(10, `${Math.floor(num)}`.length - 1);
+                let d = num / pow10;
                 d = d >= 10 ? 10 : d >= 5 ? 5 : d >= 3 ? 3 : d >= 2 ? 2 : 1;
                 return pow10 * d;
         },
